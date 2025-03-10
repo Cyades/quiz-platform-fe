@@ -9,8 +9,15 @@ const TryoutList: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Filter state
-  const [filters, setFilters] = useState({
+  // Filter state - filterInputs for current form values, appliedFilters for search execution
+  const [filterInputs, setFilterInputs] = useState({
+    title: '',
+    category: '',
+    startDate: '',
+    endDate: ''
+  });
+  
+  const [appliedFilters, setAppliedFilters] = useState({
     title: '',
     category: '',
     startDate: '',
@@ -36,7 +43,7 @@ const TryoutList: React.FC = () => {
     fetchCategories();
   }, [API_BASE_URL]);
 
-  // Fetch tryouts with filters
+  // Fetch tryouts with filters - only when appliedFilters changes (via search button)
   useEffect(() => {
     const fetchTryouts = async () => {
       try {
@@ -44,12 +51,12 @@ const TryoutList: React.FC = () => {
         
         // Build query params for filtering
         const params = new URLSearchParams();
-        if (filters.title) params.append('title', filters.title);
-        if (filters.category) params.append('category', filters.category);
-        if (filters.startDate) params.append('startDate', new Date(filters.startDate).toISOString());
-        if (filters.endDate) params.append('endDate', new Date(filters.endDate).toISOString());
+        if (appliedFilters.title) params.append('title', appliedFilters.title);
+        if (appliedFilters.category) params.append('category', appliedFilters.category);
+        if (appliedFilters.startDate) params.append('startDate', new Date(appliedFilters.startDate).toISOString());
+        if (appliedFilters.endDate) params.append('endDate', new Date(appliedFilters.endDate).toISOString());
         
-        const url = Object.values(filters).some(val => val !== '') 
+        const url = Object.values(appliedFilters).some(val => val !== '') 
           ? `${API_BASE_URL}/api/v1/tryouts/filter?${params}`
           : `${API_BASE_URL}/api/v1/tryouts`;
         
@@ -65,20 +72,31 @@ const TryoutList: React.FC = () => {
     };
 
     fetchTryouts();
-  }, [filters, API_BASE_URL]);
+  }, [appliedFilters, API_BASE_URL]); // Only depends on appliedFilters, not filterInputs
 
-  // Handle filter changes
+  // Handle filter input changes - just updates the form, doesn't trigger search
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters({
-      ...filters,
+    setFilterInputs({
+      ...filterInputs,
       [name]: value
     });
   };
 
+  // Apply filters - triggered by search button
+  const applyFilters = () => {
+    setAppliedFilters({...filterInputs});
+  };
+
   // Reset filters
   const resetFilters = () => {
-    setFilters({
+    setFilterInputs({
+      title: '',
+      category: '',
+      startDate: '',
+      endDate: ''
+    });
+    setAppliedFilters({
       title: '',
       category: '',
       startDate: '',
@@ -95,7 +113,7 @@ const TryoutList: React.FC = () => {
     });
   };
 
-  if (isLoading) {
+  if (isLoading && tryouts.length === 0) {
     return (
       <div className="tryout-list-container">
         <div className="loading">Loading tryouts...</div>
@@ -130,7 +148,7 @@ const TryoutList: React.FC = () => {
                 type="text"
                 id="title"
                 name="title"
-                value={filters.title}
+                value={filterInputs.title}
                 onChange={handleFilterChange}
                 placeholder="Search by title"
               />
@@ -141,7 +159,7 @@ const TryoutList: React.FC = () => {
               <select
                 id="category"
                 name="category"
-                value={filters.category}
+                value={filterInputs.category}
                 onChange={handleFilterChange}
               >
                 <option value="">All Categories</option>
@@ -159,7 +177,7 @@ const TryoutList: React.FC = () => {
                 type="date"
                 id="startDate"
                 name="startDate"
-                value={filters.startDate}
+                value={filterInputs.startDate}
                 onChange={handleFilterChange}
               />
             </div>
@@ -170,11 +188,16 @@ const TryoutList: React.FC = () => {
                 type="date"
                 id="endDate"
                 name="endDate"
-                value={filters.endDate}
+                value={filterInputs.endDate}
                 onChange={handleFilterChange}
               />
             </div>
-            
+          </div>
+          
+          <div className="filter-actions">
+            <button onClick={applyFilters} className="search-btn">
+              Search
+            </button>
             <button onClick={resetFilters} className="reset-filter-btn">
               Reset Filters
             </button>
@@ -182,7 +205,13 @@ const TryoutList: React.FC = () => {
         </div>
       </div>
       
-      {tryouts.length === 0 ? (
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading">Searching...</div>
+        </div>
+      )}
+      
+      {!isLoading && tryouts.length === 0 ? (
         <p className="no-results">No tryouts found matching your criteria.</p>
       ) : (
         <div className="tryout-grid">

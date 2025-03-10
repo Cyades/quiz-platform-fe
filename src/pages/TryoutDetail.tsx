@@ -16,39 +16,52 @@ const TryoutDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchTryoutData = async () => {
+      if (!id) {
+        setError("Tryout ID is missing");
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
+        console.log(`Fetching tryout with ID: ${id}`);
+        
         // Fetch tryout details
         const tryoutResponse = await axios.get(`${API_BASE_URL}/api/v1/tryouts/${id}`);
+        console.log("Tryout data received:", tryoutResponse.data);
         setTryout(tryoutResponse.data);
         
         // Fetch questions
         const questionsResponse = await axios.get(`${API_BASE_URL}/api/v1/tryouts/${id}/questions`);
+        console.log("Questions data received:", questionsResponse.data);
         setQuestions(questionsResponse.data);
         
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching data:', err);
-        setError('Failed to load tryout details. Please try again later.');
+        setError(err.response?.data?.error || 'Failed to load tryout details. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (id) {
-      fetchTryoutData();
-    }
+    fetchTryoutData();
   }, [id, API_BASE_URL]);
 
   // Format date for display
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return dateString || "Invalid date";
+    }
   };
 
   const handleDelete = async () => {
@@ -86,7 +99,7 @@ const TryoutDetail: React.FC = () => {
   if (!tryout) {
     return (
       <div className="tryout-detail-container">
-        <div className="error-message">Tryout not found.</div>
+        <div className="error-message">Tryout not found or failed to load.</div>
         <Link to="/" className="back-btn">Back to Tryouts</Link>
       </div>
     );

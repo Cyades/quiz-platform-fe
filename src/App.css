@@ -596,3 +596,32 @@ button:disabled {
     width: 100%;
   }
 }
+
+/* Search Styles */
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.search-btn {
+  background-color: #4299e1;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.search-btn:hover {
+  background-color: #3182ce;
+}
+
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
