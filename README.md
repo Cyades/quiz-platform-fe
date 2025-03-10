@@ -2,13 +2,6 @@
 
 This is the frontend component of the Quiz Platform application, built with React and TypeScript.
 
-## Features
-
-- Display a list of available tryouts
-- View detailed information about individual tryouts
-- Responsive design for various screen sizes
-- Integration with the backend REST API
-
 ## Prerequisites
 
 - Node.js (v14.0.0 or later)
