@@ -1,46 +1,91 @@
-# Getting Started with Create React App
+# Quiz Platform Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the frontend component of the Quiz Platform application, built with React and TypeScript.
+
+## Features
+
+- Display a list of available tryouts
+- View detailed information about individual tryouts
+- Responsive design for various screen sizes
+- Integration with the backend REST API
+
+## Prerequisites
+
+- Node.js (v14.0.0 or later)
+- npm (v6.0.0 or later)
+
+## Setup and Installation
+
+### 1. Install Dependencies
+
+```bash
+# Install all required npm packages
+npm install
+```
+
+### 2. Configure Environment
+
+The application uses environment variables for configuration. A `.env` file is provided:
+
+```
+REACT_APP_API_URL=http://localhost:8080
+```
+
+If your backend is running on a different host or port, update this value accordingly.
+
+### 3. Start the Development Server
+
+```bash
+npm start
+```
+
+This will start the development server on port 3000. The application will be available at:
+http://localhost:3000
+
+### 4. Build for Production (Optional)
+
+```bash
+npm run build
+```
+
+This creates an optimized production build in the `build` directory that can be served by any static file server.
+
+## Usage
+
+1. **Viewing Tryouts**: The home page displays a grid of all available tryouts
+2. **Viewing Details**: Click on any tryout card to see its detailed information
+
+## Integration with Backend
+
+The frontend communicates with the backend API at the URL specified in the `.env` file. Make sure the backend server is running before accessing the frontend application.
+
+## Project Structure
+
+```
+frontend/
+├── public/          # Static assets
+│   ├── favicon.ico  # Page icon
+│   └── index.html   # HTML template
+├── src/             # Source code
+│   ├── components/  # Reusable components
+│   │   ├── Footer.tsx
+│   │   └── Navigation.tsx
+│   ├── pages/       # Page components
+│   │   ├── TryoutDetail.tsx
+│   │   └── TryoutList.tsx
+│   ├── types/       # TypeScript definitions
+│   │   └── index.ts
+│   ├── App.css      # Global styles
+│   ├── App.tsx      # Main component with routes
+│   └── index.tsx    # Application entry point
+├── .env             # Environment variables
+├── package.json     # NPM dependencies
+└── tsconfig.json    # TypeScript configuration
+```
 
 ## Available Scripts
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `npm start`: Runs the app in development mode
+- `npm test`: Runs the test suite
+- `npm run build`: Builds the app for production
+- `npm run eject`: Ejects from Create React App (one-way operation)
