@@ -13,6 +13,9 @@ const Navigation: React.FC = () => {
             <li>
               <Link to="/">Tryouts</Link>
             </li>
+            <li>
+              <Link to="/tryout/new">Create Tryout</Link>
+            </li>
           </ul>
         </div>
       </div>
