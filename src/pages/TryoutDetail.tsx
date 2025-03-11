@@ -8,45 +8,64 @@ const TryoutDetail: React.FC = () => {
   const navigate = useNavigate();
   const [tryout, setTryout] = useState<Tryout | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoadingTryout, setIsLoadingTryout] = useState<boolean>(true);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState<boolean>(true);
+  const [tryoutError, setTryoutError] = useState<string | null>(null);
+  const [questionError, setQuestionError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<boolean>(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
+  // Fetch tryout details
   useEffect(() => {
-    const fetchTryoutData = async () => {
+    const fetchTryoutDetails = async () => {
       if (!id) {
-        setError("Tryout ID is missing");
-        setIsLoading(false);
+        setTryoutError("Tryout ID is missing");
+        setIsLoadingTryout(false);
         return;
       }
 
       try {
-        setIsLoading(true);
-        console.log(`Fetching tryout with ID: ${id}`);
-        
-        // Fetch tryout details
-        const tryoutResponse = await axios.get(`${API_BASE_URL}/api/v1/tryouts/${id}`);
-        console.log("Tryout data received:", tryoutResponse.data);
-        setTryout(tryoutResponse.data);
-        
-        // Fetch questions
-        const questionsResponse = await axios.get(`${API_BASE_URL}/api/v1/tryouts/${id}/questions`);
-        console.log("Questions data received:", questionsResponse.data);
-        setQuestions(questionsResponse.data);
-        
-        setError(null);
+        const response = await axios.get(`${API_BASE_URL}/api/v1/tryouts/${id}`);
+        console.log("Tryout data received:", response.data);
+        setTryout(response.data);
+        setTryoutError(null);
       } catch (err: any) {
-        console.error('Error fetching data:', err);
-        setError(err.response?.data?.error || 'Failed to load tryout details. Please try again later.');
+        console.error('Error fetching tryout details:', err);
+        setTryoutError(err.response?.data?.error || 'Failed to load tryout details. Please try again later.');
       } finally {
-        setIsLoading(false);
+        setIsLoadingTryout(false);
       }
     };
 
-    fetchTryoutData();
+    fetchTryoutDetails();
   }, [id, API_BASE_URL]);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      if (!id) {
+        setIsLoadingQuestions(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/tryouts/${id}/questions`);
+        console.log("Questions data received:", response.data);
+        setQuestions(Array.isArray(response.data) ? response.data : []);
+        setQuestionError(null);
+      } catch (err: any) {
+        console.error('Error fetching questions:', err);
+        setQuestions([]);
+        setQuestionError(err.response?.data?.error || 'Failed to load questions. The tryout may not have any questions yet.');
+      } finally {
+        setIsLoadingQuestions(false);
+      }
+    };
+
+    if (!isLoadingTryout && tryout) {
+      fetchQuestions();
+    }
+  }, [isLoadingTryout, tryout, id, API_BASE_URL]);
 
   // Format date for display
   const formatDate = (dateString: string): string => {
@@ -73,13 +92,14 @@ const TryoutDetail: React.FC = () => {
     try {
       await axios.delete(`${API_BASE_URL}/api/v1/tryouts/${id}`);
       navigate('/');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting tryout:', err);
-      setError('Failed to delete tryout. Please try again later.');
+      setTryoutError('Failed to delete tryout. Please try again later.');
     }
   };
 
-  if (isLoading) {
+  // Only show loading for tryout data
+  if (isLoadingTryout) {
     return (
       <div className="tryout-detail-container">
         <div className="loading">Loading tryout details...</div>
@@ -87,15 +107,17 @@ const TryoutDetail: React.FC = () => {
     );
   }
 
-  if (error) {
+  // Handle tryout load error
+  if (tryoutError) {
     return (
       <div className="tryout-detail-container">
-        <div className="error-message">{error}</div>
+        <div className="error-message">{tryoutError}</div>
         <Link to="/" className="back-btn">Back to Tryouts</Link>
       </div>
     );
   }
 
+  // Handle missing tryout data
   if (!tryout) {
     return (
       <div className="tryout-detail-container">
@@ -126,7 +148,7 @@ const TryoutDetail: React.FC = () => {
         </div>
 
         <div className="tryout-questions">
-          <h2>Questions ({questions.length})</h2>
+          <h2>Questions {isLoadingQuestions ? '(Loading...)' : `(${questions.length})`}</h2>
           
           {!tryout.hasSubmission && (
             <Link to={`/tryout/${id}/questions/new`} className="add-question-btn">
@@ -134,7 +156,14 @@ const TryoutDetail: React.FC = () => {
             </Link>
           )}
           
-          {questions.length === 0 ? (
+          {isLoadingQuestions ? (
+            <p>Loading questions...</p>
+          ) : questionError ? (
+            <div>
+              <p>Unable to load questions: {questionError}</p>
+              <p>You can try to add a new question.</p>
+            </div>
+          ) : questions.length === 0 ? (
             <p>No questions available for this tryout.</p>
           ) : (
             <div className="question-list">
@@ -152,9 +181,9 @@ const TryoutDetail: React.FC = () => {
                             try {
                               await axios.delete(`${API_BASE_URL}/api/v1/tryouts/${id}/questions/${question.id}`);
                               setQuestions(questions.filter(q => q.id !== question.id));
-                            } catch (err) {
+                            } catch (err: any) {
                               console.error('Error deleting question:', err);
-                              setError('Failed to delete question. Please try again later.');
+                              setQuestionError('Failed to delete question. Please try again later.');
                             }
                           }}
                           className="delete-btn"
