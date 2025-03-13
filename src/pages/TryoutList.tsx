@@ -3,11 +3,17 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Tryout } from '../types';
 
+const getTodayDate = (): string => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
 const TryoutList: React.FC = () => {
   const [tryouts, setTryouts] = useState<Tryout[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
   
   // Filter state - filterInputs for current form values, appliedFilters for search execution
   const [filterInputs, setFilterInputs] = useState({
@@ -71,10 +77,12 @@ const TryoutList: React.FC = () => {
           : `${API_BASE_URL}/api/v1/tryouts`;
         
         const response = await axios.get(url);
-        setTryouts(response.data);
+        
+        setTryouts(Array.isArray(response.data) ? response.data : []);
         setError(null);
       } catch (err) {
         console.error('Error fetching tryouts:', err);
+        setTryouts([]);
         setError('Failed to load tryouts. Please try again later.');
       } finally {
         setIsLoading(false);
@@ -87,6 +95,23 @@ const TryoutList: React.FC = () => {
   // Handle filter input changes - just updates the form, doesn't trigger search
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'startDate' || name === 'endDate') {
+      setDateError(null);
+    }
+    
+    // Check if startDate is in the future
+    if (name === 'startDate' && value !== '') {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate > today) {
+        setDateError("From Date cannot be in the future. Please select today or an earlier date.");
+        return;
+      }
+    }
+    
     setFilterInputs({
       ...filterInputs,
       [name]: value
@@ -95,6 +120,20 @@ const TryoutList: React.FC = () => {
 
   // Apply filters - triggered by search button
   const applyFilters = () => {
+    // Check if startDate is in the future before applying filters
+    if (filterInputs.startDate) {
+      const selectedDate = new Date(filterInputs.startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate > today) {
+        setDateError("From Date cannot be in the future. Please select today or an earlier date.");
+        return;
+      }
+    }
+    
+    setDateError(null);
+    
     setAppliedFilters({...filterInputs});
   };
 
@@ -112,6 +151,7 @@ const TryoutList: React.FC = () => {
       startDate: '',
       endDate: ''
     });
+    setDateError(null);
   };
 
   // Format date for display
@@ -123,18 +163,10 @@ const TryoutList: React.FC = () => {
     });
   };
 
-  if (isLoading && tryouts.length === 0) {
+  if (isLoading && tryouts.length === 0 && !Object.values(appliedFilters).some(val => val !== '')) {
     return (
       <div className="tryout-list-container">
         <div className="loading">Loading tryouts...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="tryout-list-container">
-        <div className="error-message">{error}</div>
       </div>
     );
   }
@@ -189,7 +221,7 @@ const TryoutList: React.FC = () => {
                 name="startDate"
                 value={filterInputs.startDate}
                 onChange={handleFilterChange}
-                max={filterInputs.endDate || undefined}
+                max={filterInputs.endDate || getTodayDate()}
               />
             </div>
             
@@ -206,8 +238,16 @@ const TryoutList: React.FC = () => {
             </div>
           </div>
           
+          {dateError && (
+            <div className="date-error-message">{dateError}</div>
+          )}
+          
           <div className="filter-actions">
-            <button onClick={applyFilters} className="search-btn">
+            <button 
+              onClick={applyFilters} 
+              className="search-btn"
+              disabled={!!dateError}
+            >
               Search
             </button>
             <button onClick={resetFilters} className="reset-filter-btn">
@@ -223,8 +263,20 @@ const TryoutList: React.FC = () => {
         </div>
       )}
       
+      {error && <div className="error-message">{error}</div>}
+      
       {!isLoading && tryouts.length === 0 ? (
-        <p className="no-results">No tryouts found matching your criteria.</p>
+        <div className="no-results-container">
+          <div className="no-results">
+            <h3>No tryouts found</h3>
+            <p>{Object.values(appliedFilters).some(val => val !== '') 
+              ? 'No tryouts match your search criteria. Try adjusting your filters or create a new tryout.' 
+              : 'There are no tryouts available. Create your first tryout to get started!'}</p>
+            <Link to="/tryout/new" className="create-tryout-btn">
+              Create New Tryout
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="tryout-grid">
           {tryouts.map((tryout) => (
