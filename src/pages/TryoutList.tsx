@@ -53,8 +53,18 @@ const TryoutList: React.FC = () => {
         const params = new URLSearchParams();
         if (appliedFilters.title) params.append('title', appliedFilters.title);
         if (appliedFilters.category) params.append('category', appliedFilters.category);
-        if (appliedFilters.startDate) params.append('startDate', new Date(appliedFilters.startDate).toISOString());
-        if (appliedFilters.endDate) params.append('endDate', new Date(appliedFilters.endDate).toISOString());
+        
+        if (appliedFilters.startDate) {
+          const startDate = new Date(appliedFilters.startDate);
+          startDate.setHours(0, 0, 0, 0);
+          params.append('startDate', startDate.toISOString());
+        }
+        
+        if (appliedFilters.endDate) {
+          const endDate = new Date(appliedFilters.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          params.append('endDate', endDate.toISOString());
+        }
         
         const url = Object.values(appliedFilters).some(val => val !== '') 
           ? `${API_BASE_URL}/api/v1/tryouts/filter?${params}`
@@ -179,6 +189,7 @@ const TryoutList: React.FC = () => {
                 name="startDate"
                 value={filterInputs.startDate}
                 onChange={handleFilterChange}
+                max={filterInputs.endDate || undefined}
               />
             </div>
             
@@ -190,6 +201,7 @@ const TryoutList: React.FC = () => {
                 name="endDate"
                 value={filterInputs.endDate}
                 onChange={handleFilterChange}
+                min={filterInputs.startDate || undefined}
               />
             </div>
           </div>
